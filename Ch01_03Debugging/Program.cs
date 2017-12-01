@@ -5,7 +5,8 @@ using Device1 = SharpDX.Direct3D11.Device1;
 using SharpDX.DXGI;
 using SharpDX.Windows;
 
-namespace WindowsFormsApplication1
+
+namespace Ch01_03Debugging
 {
     static class Program
     {
@@ -74,8 +75,8 @@ namespace WindowsFormsApplication1
 
                 swapChain.Present(0, PresentFlags.None, new PresentParameters());
             }
-            
-            
+
+
             // create refrences
             var backbuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
             var renderTargetView = new RenderTargetView(device, backbuffer);
@@ -116,4 +117,5 @@ namespace WindowsFormsApplication1
 
         }
     }
+
 }
