@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApplication1", "WindowsFormsApplication1\WindowsFormsApplication1.csproj", "{B3FA7D61-F9E5-4D7F-9EBE-9FC12239209D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch01_02Direct3D11_1", "WindowsFormsApplication1\Ch01_02Direct3D11_1.csproj", "{B3FA7D61-F9E5-4D7F-9EBE-9FC12239209D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A6D22F23-8D57-4347-AEDC-6C5997FB3D75}
 	EndGlobalSection
 EndGlobal

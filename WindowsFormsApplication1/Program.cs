@@ -40,7 +40,7 @@ namespace WindowsFormsApplication1
                 {
                     SharpDX.Direct3D.FeatureLevel.Level_11_1,
                     SharpDX.Direct3D.FeatureLevel.Level_11_0,
-                    SharpDX.Direct3D.FeatureLevel.Level_10_1,
+                    //SharpDX.Direct3D.FeatureLevel.Level_10_1,
                 }))
             {
                 // Query device
