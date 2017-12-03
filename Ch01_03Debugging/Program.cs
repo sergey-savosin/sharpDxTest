@@ -16,6 +16,9 @@ namespace Ch01_03Debugging
         [STAThread]
         static void Main()
         {
+            // Enable object tracking
+            SharpDX.Configuration.EnableObjectTracking = true;
+
             #region Direct3D initialization
 
             // Create window to render to
@@ -28,8 +31,9 @@ namespace Ch01_03Debugging
             SwapChain1 swapChain;
 
             // Create D3D11 device
-            using (var device11 = new Device(SharpDX.Direct3D.DriverType.Hardware,
-                DeviceCreationFlags.None,
+            using (var device11 = new Device(
+                SharpDX.Direct3D.DriverType.Hardware,
+                DeviceCreationFlags.Debug,
                 new[]
                 {
                     SharpDX.Direct3D.FeatureLevel.Level_11_1,
@@ -73,6 +77,7 @@ namespace Ch01_03Debugging
                     },
                     null);
 
+                //swapChain.Present(0, PresentFlags.RestrictToOutput);
                 swapChain.Present(0, PresentFlags.None, new PresentParameters());
             }
 
@@ -82,6 +87,13 @@ namespace Ch01_03Debugging
             var renderTargetView = new RenderTargetView(device, backbuffer);
 
             #endregion
+
+            // Setup object debug names
+            device.DebugName = "The Device";
+            device.ImmediateContext.DebugName = "The 1";
+            swapChain.DebugName = "The Swapchain";
+            backbuffer.DebugName = "The Backbuffer";
+            renderTargetView.DebugName = "The RenderTargetView";
 
             #region Render loop
 
@@ -102,6 +114,12 @@ namespace Ch01_03Debugging
                 // Executing
                 totalSeconds += 1;
                 // Present the frame
+
+                // Output the current active Direct3D objects
+                System.Diagnostics.Debug.Write(
+                    SharpDX.Diagnostics.ObjectTracker.ReportActiveObjects());
+
+                //swapChain.Present(0, PresentFlags.RestrictToOutput);
                 swapChain.Present(0, PresentFlags.None);
             });
 

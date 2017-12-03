@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch01_02Direct3D11_1", "Wind
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch01_03Debugging", "Ch01_03Debugging\Ch01_03Debugging.csproj", "{2994ACD0-C29B-4A36-BBA6-CE59674012F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{939D8319-6E32-4700-BE9F-C1D079F57DDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch02_01DirectX", "Ch02_01DirectX\Ch02_01DirectX.csproj", "{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{2994ACD0-C29B-4A36-BBA6-CE59674012F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2994ACD0-C29B-4A36-BBA6-CE59674012F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2994ACD0-C29B-4A36-BBA6-CE59674012F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{939D8319-6E32-4700-BE9F-C1D079F57DDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{939D8319-6E32-4700-BE9F-C1D079F57DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{939D8319-6E32-4700-BE9F-C1D079F57DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{939D8319-6E32-4700-BE9F-C1D079F57DDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
