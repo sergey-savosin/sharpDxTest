@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
+using Buffer = SharpDX.Direct3D11.Buffer;
 using SharpDX;
 using SharpDX.Windows;
+using System.Windows.Forms;
 
 namespace Ch02_01DirectX
 {
@@ -22,12 +24,20 @@ namespace Ch02_01DirectX
         ShaderBytecode pixelShaderBytecode;
         PixelShader pixelShader;
 
+        // A vertex shader that gives depth info to pixel shader
+        ShaderBytecode depthVertexShaderBytecode;
+        VertexShader depthVertexShader;
+
+        // A pixel shader that renders the depth (black closer, white further away)
+        ShaderBytecode depthPixelShaderBytecode;
+        PixelShader depthPixelShader;
+
         // Vertex layout for the IA
         InputLayout vertexLayout;
 
         // A buffer to update constant buffer
         // used by vertex shader
-        SharpDX.Direct3D11.Buffer worldViewProjectionBuffer;
+        Buffer worldViewProjectionBuffer;
 
         // Depth stencil
         DepthStencilState depthStencilState;
@@ -50,6 +60,12 @@ namespace Ch02_01DirectX
             RemoveAndDispose(ref vertexShaderBytecode);
             RemoveAndDispose(ref pixelShader);
             RemoveAndDispose(ref pixelShaderBytecode);
+
+            RemoveAndDispose(ref depthPixelShader);
+            RemoveAndDispose(ref depthPixelShaderBytecode);
+            RemoveAndDispose(ref depthVertexShader);
+            RemoveAndDispose(ref depthVertexShaderBytecode);
+
             RemoveAndDispose(ref vertexLayout);
             RemoveAndDispose(ref worldViewProjectionBuffer);
             RemoveAndDispose(ref depthStencilState);
@@ -60,11 +76,10 @@ namespace Ch02_01DirectX
 
             ShaderFlags shaderFlags = ShaderFlags.None;
 #if DEBUG
-            //shaderFlags = ShaderFlags.Debug;
+            shaderFlags = ShaderFlags.Debug;
 #endif
 
             // Compile and create the vertex shader
-            //var res = ShaderBytecode.CompileFromFile("Simple.hlsl", "VSMain", "vs_5_0", shaderFlags);
             vertexShaderBytecode = ToDispose(
                 ShaderBytecode.CompileFromFile("Simple.hlsl", "VSMain", "vs_5_0", shaderFlags));
             vertexShader = ToDispose(new VertexShader(device, vertexShaderBytecode));
@@ -73,6 +88,13 @@ namespace Ch02_01DirectX
             pixelShaderBytecode = ToDispose(
                 ShaderBytecode.CompileFromFile("Simple.hlsl", "PSMain", "ps_5_0", shaderFlags));
             pixelShader = ToDispose(new PixelShader(device, pixelShaderBytecode));
+
+            // Compile and create the depth vertex and pixel shaders
+            // These shaders are for checking what the depth buffer should look like
+            depthVertexShaderBytecode = ToDispose(ShaderBytecode.CompileFromFile("Depth.hlsl", "VSMain", "vs_5_0", shaderFlags));
+            depthVertexShader = ToDispose(new VertexShader(device, depthVertexShaderBytecode));
+            depthPixelShaderBytecode = ToDispose(ShaderBytecode.CompileFromFile("Depth.hlsl", "PSMain", "ps_5_0", shaderFlags));
+            depthPixelShader = ToDispose(new PixelShader(device, depthPixelShaderBytecode));
 
             // Layout from VertexShader input signature
             vertexLayout = ToDispose(
@@ -206,6 +228,162 @@ namespace Ch02_01DirectX
                     100f);
             };
 
+            #region Rotation and window event handlers
+            var rotation = new Vector3(0.0f, 0.0f, 0.0f);
+
+            Action updateText = () =>
+            {
+                textRenderer.Text =
+                    String.Format("World rotation ({0}) (Up/Down Left/Right Wheel +-)"
+                    + "\nView ({1}) (A/D W/S Shift+Wheel)"
+                    + "\nPress X to reinitialize the device and resources (device ptr: {2})"
+                    + "\nPress Z to show/hide depth buffer",
+                    rotation,
+                    viewMatrix.TranslationVector,
+                    DeviceManager.Direct3DDevice.NativePointer);
+            };
+
+            bool useDepthShaders = false;
+
+            // Support keyboard/mouse input
+            var moveFactor = 0.02f;
+            var shiftKey = false;
+            var ctrlKey = false;
+
+            Window.KeyDown += (s, e) =>
+            {
+                shiftKey = e.Shift;
+                ctrlKey = e.Control;
+
+                switch (e.KeyCode)
+                {
+                    // WASD -> pans view
+                    case Keys.A:
+                        viewMatrix.TranslationVector += new Vector3(moveFactor * 2, 0f, 0f);
+                        break;
+                    case Keys.D:
+                        viewMatrix.TranslationVector -= new Vector3(moveFactor * 2, 0f, 0f);
+                        break;
+                    case Keys.S:
+                        if (shiftKey)
+                            viewMatrix.TranslationVector += new Vector3(0f, moveFactor * 2, 0f);
+                        else
+                            viewMatrix.TranslationVector += new Vector3(0f, 0f, 1f) * moveFactor * 2;
+                        break;
+                    case Keys.W:
+                        if (shiftKey)
+                            viewMatrix.TranslationVector -= new Vector3(0f, moveFactor * 2, 0f);
+                        else
+                            viewMatrix.TranslationVector -= new Vector3(0f, 0f, 1f) * moveFactor * 2;
+                        break;
+
+                    // Up/Down and Left/Right - rotates around  X / Y
+                    case Keys.Down:
+                        worldMatrix *= Matrix.RotationX(-moveFactor);
+                        rotation -= new Vector3(moveFactor, 0f, 0f);
+                        break;
+                    case Keys.Up:
+                        worldMatrix *= Matrix.RotationX(moveFactor);
+                        rotation += new Vector3(moveFactor, 0f, 0f);
+                        break;
+                    case Keys.Left:
+                        worldMatrix *= Matrix.RotationY(-moveFactor);
+                        rotation -= new Vector3(0f, moveFactor, 0f);
+                        break;
+                    case Keys.Right:
+                        worldMatrix *= Matrix.RotationY(moveFactor);
+                        rotation += new Vector3(0f, moveFactor, 0f);
+                        break;
+
+                    case Keys.X:
+                        // To test correct resource recreation
+                        // Simulate device reset or lost
+                        System.Diagnostics.Debug.WriteLine(SharpDX.Diagnostics.ObjectTracker.ReportActiveObjects());
+                        DeviceManager.Initialize(DeviceManager.Dpi);
+                        System.Diagnostics.Debug.WriteLine(SharpDX.Diagnostics.ObjectTracker.ReportActiveObjects());
+                        break;
+                    case Keys.Z:
+                        var context = DeviceManager.Direct3DContext;
+                        useDepthShaders = !useDepthShaders;
+                        if (useDepthShaders)
+                        {
+                            context.VertexShader.Set(depthVertexShader);
+                            context.PixelShader.Set(depthPixelShader);
+                        }
+                        else
+                        {
+                            context.VertexShader.Set(vertexShader);
+                            context.PixelShader.Set(pixelShader);
+                        }
+                        break;
+                }
+
+                updateText();
+            };
+
+            Window.KeyUp += (s, e) =>
+            {
+                // Clear shift/ctrl keys so they aren't sticky
+                if (e.KeyCode == Keys.Shift)
+                    shiftKey = false;
+                if (e.KeyCode == Keys.Control)
+                    ctrlKey = false;
+            };
+
+            Window.MouseWheel += (s, e) =>
+            {
+                if (shiftKey)
+                {
+                    // Zoom in/out
+                    viewMatrix.TranslationVector -= new Vector3(0f, 0f, (e.Delta / 120f) * moveFactor * 2);
+                }
+                else
+                {
+                    // rotate around Z-axis
+                    viewMatrix *= Matrix.RotationZ((e.Delta / 120f) * moveFactor);
+                    rotation += new Vector3(0f, 0f, (e.Delta / 120f) * moveFactor);
+                }
+
+                updateText();
+            };
+
+            var lastX = 0;
+            var lastY = 0;
+
+            Window.MouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    lastX = e.X;
+                    lastY = e.Y;
+                }
+            };
+
+            Window.MouseMove += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    var yRotate = lastX - e.X;
+                    var xRotate = lastY - e.Y;
+                    lastY = e.Y;
+                    lastX = e.X;
+
+                    // Mouse move changes 
+                    viewMatrix *= Matrix.RotationX(xRotate * moveFactor);
+                    viewMatrix *= Matrix.RotationY(yRotate * moveFactor);
+
+                    updateText();
+                }
+            };
+
+            // Display instructions with initial values
+            updateText();
+
+            #endregion
+
+            var clock = new System.Diagnostics.Stopwatch();
+            clock.Start();
+
             #region Render Loop
 
             RenderLoop.Run(Window, () =>
@@ -226,6 +404,13 @@ namespace Ch02_01DirectX
                 // ViewProjection matrix
                 var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix);
 
+                // If Keys.CtrlKey is down, auto rotate viewProjection based on time
+                if (ctrlKey)
+                {
+                    var time = clock.ElapsedMilliseconds / 1000.0f;
+                    viewProjection = Matrix.RotationY(time * 1.8f) * Matrix.RotationZ(time * 1f) * Matrix.RotationZ(time * 0.6f) * viewProjection;
+                }
+
                 // WorldViewProjection matrix
                 var worldViewProjection = worldMatrix * viewProjection;
 
@@ -243,6 +428,7 @@ namespace Ch02_01DirectX
 
                 // Render FPS
                 fps.Render();
+                
                 // Render instructions + position changes
                 textRenderer.Render();
 
