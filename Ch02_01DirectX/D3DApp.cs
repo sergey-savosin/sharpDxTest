@@ -324,9 +324,9 @@ namespace Ch02_01DirectX
             Window.KeyUp += (s, e) =>
             {
                 // Clear shift/ctrl keys so they aren't sticky
-                if (e.KeyCode == Keys.Shift)
+                if (e.KeyCode == Keys.ShiftKey)
                     shiftKey = false;
-                if (e.KeyCode == Keys.Control)
+                if (e.KeyCode == Keys.ControlKey)
                     ctrlKey = false;
             };
 
