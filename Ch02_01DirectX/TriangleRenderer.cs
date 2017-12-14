@@ -19,13 +19,37 @@ namespace Ch02_01DirectX
         // The vertex buffer binding structure for the triangle
         VertexBufferBinding triangleBinging;
 
+        // Shader texture resource
+        ShaderResourceView textureView;
+
+        // Control sampling behavior with this state
+        SamplerState samplerState;
+
         protected override void CreateDeviceDependentResources()
         {
             base.CreateDeviceDependentResources();
+
             RemoveAndDispose(ref triangleVerteces);
 
             // Retrieve Device1 instance
             var device = this.DeviceManager.Direct3DDevice;
+
+            // Load texture
+            var imagingFactory = DeviceManager.WICFactory;
+            var texture = LoadTexture.LoadFromFile(device, imagingFactory, "Texture2.png");
+            textureView = ToDispose(
+                new ShaderResourceView(device, texture));
+
+            // Create our sampler state
+            samplerState = ToDispose(
+                new SamplerState(
+                    device, new SamplerStateDescription()
+                    {
+                        AddressU = TextureAddressMode.Wrap,
+                        AddressV = TextureAddressMode.Wrap,
+                        AddressW = TextureAddressMode.Wrap,
+                        Filter = Filter.MinMagMipLinear,
+                    }));
 
             // Create a triangle
             triangleVerteces = ToDispose(Buffer.Create(
@@ -33,19 +57,25 @@ namespace Ch02_01DirectX
                 BindFlags.VertexBuffer,
                 new[]
                 {
-                    /* Vertex position - Vertex color */
-                    new Vector4(0.0f, 0.0f, 0.5f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f), // Base-right
-                    new Vector4(-0.5f, 0.0f, 0.0f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f), // Base-left
-                    new Vector4(-0.25f, 1.0f, 0.25f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f), // Apex
+                    /* Vertex position       -     Vertex UV */
+                    0.75f, -0.75f, -0.001f, 1.0f,  1.0f, 1.0f, // Base-right
+                    -0.75f, -0.75f, -0.001f, 1.0f, 0.0f, 1.0f, // Base-left
+                    0.0f, 0.75f, -0.001f, 1.0f,    0.5f, 0.0f, // Apex
                 }));
 
-            triangleBinging = new VertexBufferBinding(triangleVerteces, Utilities.SizeOf<Vector4>() * 2, 0);
+            triangleBinging = new VertexBufferBinding(triangleVerteces, Utilities.SizeOf<float>() * 6, 0);
         }
 
         protected override void DoRender()
         {
             // Get the context reference
             var context = this.DeviceManager.Direct3DContext;
+
+            // Set the shader resource
+            context.PixelShader.SetShaderResource(0, textureView);
+
+            // Set the sampler state
+            context.PixelShader.SetSampler(0, samplerState);
 
             // Render the triangle
             context.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;

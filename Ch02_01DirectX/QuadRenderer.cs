@@ -23,6 +23,12 @@ namespace Ch02_01DirectX
         // The vertex buffer binding for the quad
         VertexBufferBinding quadBinding;
 
+        // Shader texture resource
+        ShaderResourceView textureView;
+
+        // Control sampling behavior with this state
+        SamplerState samplerState;
+
         protected override void CreateDeviceDependentResources()
         {
             base.CreateDeviceDependentResources();
@@ -33,20 +39,37 @@ namespace Ch02_01DirectX
             // Retrieve our device instance
             var device = this.DeviceManager.Direct3DDevice;
 
+            // Load texture
+            var imagingFactory = DeviceManager.WICFactory;
+            var texture = LoadTexture.LoadFromFile(device, imagingFactory, "Texture.png");
+            textureView = ToDispose(
+                new ShaderResourceView(device, texture));
+
+            // Create our sampler state
+            samplerState = ToDispose(
+                new SamplerState(
+                    device, new SamplerStateDescription()
+                    {
+                        AddressU = TextureAddressMode.Clamp, //.Wrap,
+                        AddressV = TextureAddressMode.Clamp, //.Wrap,
+                        AddressW = TextureAddressMode.Clamp, //.Wrap,
+                        Filter = Filter.MinMagMipLinear,
+                    }));
+
             // Create a quad (two triangles)
             quadVertices = ToDispose(Buffer.Create(
                 device,
                 BindFlags.VertexBuffer,
                 new[]
                 {
-                    /* Vertex position - Vertex color */
-                    new Vector4(0.25f, 0.5f, -0.5f, 1.0f), new Vector4(0.0f, 1.0f, 0.0f, 1.0f), // Top-left
-                    new Vector4(0.75f, 0.5f, -0.5f, 1.0f), new Vector4(1.0f, 1.0f, 0.0f, 1.0f), // Top-right
-                    new Vector4(0.75f, 0.0f, -0.5f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f), // Base-right
-                    new Vector4(0.25f, 0.0f, -0.5f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f), // Base-left
+                    /* Vertex position       -       Vertex UV */
+                    -0.75f, 0.75f, 0f, 1.0f,         0.0f, 0.0f, // Top-left
+                    0.75f, 0.75f, 0f, 1.0f,          2.0f, 0.0f, // Top-right
+                    0.75f, -0.75f, 0f, 1.0f,         2.0f, 2.0f, // Base-right
+                    -0.75f, -0.75f, 0f, 1.0f,        0.0f, 2.0f, // Base-left
                 }));
 
-            quadBinding = new VertexBufferBinding(quadVertices, Utilities.SizeOf<Vector4>() * 2, 0);
+            quadBinding = new VertexBufferBinding(quadVertices, Utilities.SizeOf<float>() * 6, 0);
 
             /****************
              * v0    v1
@@ -69,6 +92,12 @@ namespace Ch02_01DirectX
         protected override void DoRender()
         {
             var context = this.DeviceManager.Direct3DContext;
+
+            // Set the shader resource
+            context.PixelShader.SetShaderResource(0, textureView);
+
+            // Set the sampler state
+            context.PixelShader.SetSampler(0, samplerState);
 
             context.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             // Set the index buffer

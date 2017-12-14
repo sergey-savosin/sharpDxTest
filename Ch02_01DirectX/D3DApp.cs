@@ -48,7 +48,10 @@ namespace Ch02_01DirectX
 
         protected override SwapChainDescription1 CreateSwapChainDescription()
         {
-            return base.CreateSwapChainDescription();
+            var description = base.CreateSwapChainDescription();
+            description.SampleDescription.Count = 4;
+            description.SampleDescription.Quality = 0;
+            return description;
         }
 
         protected override void CreateDeviceDependentResources(DeviceManager deviceManager)
@@ -80,6 +83,7 @@ namespace Ch02_01DirectX
 #endif
 
             // Compile and create the vertex shader
+            //--var res = ShaderBytecode.CompileFromFile("Simple.hlsl", "VSMain", "vs_5_0", shaderFlags);
             vertexShaderBytecode = ToDispose(
                 ShaderBytecode.CompileFromFile("Simple.hlsl", "VSMain", "vs_5_0", shaderFlags));
             vertexShader = ToDispose(new VertexShader(device, vertexShaderBytecode));
@@ -105,8 +109,10 @@ namespace Ch02_01DirectX
                     {
                         // input semantic SV_Position = vertex coord in object space
                         new InputElement("SV_Position", 0, Format.R32G32B32A32_Float, 0, 0),
-                        // input semantic COLOR = vertex color
-                        new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0)
+                        // input semantic TEXTCOORD = vertex texture coordinate
+                        new InputElement("TEXCOORD", 0, Format.R32G32_Float, 16, 0),
+                        //new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0)
+
                     }
                 ));
 

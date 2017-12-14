@@ -74,6 +74,7 @@
     <Compile Include="HLSLCompiler.cs" />
     <Compile Include="HLSLFileIncludeHandler.cs" />
     <Compile Include="IComponent.cs" />
+    <Compile Include="LoadTexture.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="RendererBase.cs" />
     <Compile Include="DeviceManager.cs" />
