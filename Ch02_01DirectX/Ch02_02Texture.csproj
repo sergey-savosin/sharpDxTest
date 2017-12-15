@@ -7,7 +7,7 @@
     <ProjectGuid>{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Ch02_01DirectX</RootNamespace>
-    <AssemblyName>Ch02_01DirectX</AssemblyName>
+    <AssemblyName>Ch02_02Texture</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -87,6 +87,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

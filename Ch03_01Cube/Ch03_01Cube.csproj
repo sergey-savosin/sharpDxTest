@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{43E7624C-ACC9-4154-9363-5CFCFC2B493E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Ch02_01DirectX</RootNamespace>
-    <AssemblyName>Ch02_01DirectX</AssemblyName>
+    <RootNamespace>Ch03_01Cube</RootNamespace>
+    <AssemblyName>Ch03_01Cube</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuadRenderer.cs" />
     <Compile Include="TriangleRenderer.cs" />
+    <Compile Include="Vertex.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -88,6 +89,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
