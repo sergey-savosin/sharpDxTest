@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch01_02Direct3D11_1", "WindowsFormsApplication1\Ch01_02Direct3D11_1.csproj", "{B3FA7D61-F9E5-4D7F-9EBE-9FC12239209D}"
 EndProject
@@ -9,7 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch01_03Debugging", "Ch01_03
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{939D8319-6E32-4700-BE9F-C1D079F57DDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch02_01DirectX", "Ch02_01DirectX\Ch02_01DirectX.csproj", "{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch02_02Texture", "Ch02_01DirectX\Ch02_02Texture.csproj", "{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ch02_01Primitives", "Ch02_01Primitives\Ch02_01Primitives.csproj", "{C1B39937-D89D-4A32-833F-4A2BC44B661F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA3432F9-5F04-46ED-9773-D7E0759DDCDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1B39937-D89D-4A32-833F-4A2BC44B661F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1B39937-D89D-4A32-833F-4A2BC44B661F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1B39937-D89D-4A32-833F-4A2BC44B661F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1B39937-D89D-4A32-833F-4A2BC44B661F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
