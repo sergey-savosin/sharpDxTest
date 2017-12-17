@@ -100,13 +100,12 @@ namespace Ch03_01Cube
             vertexLayout = ToDispose(
                 new InputLayout(
                     device,
-                    vertexShaderBytecode.GetPart(ShaderBytecodePart.InputSignatureBlob),
+                    ShaderSignature.GetInputSignature(vertexShaderBytecode),
                     new[]
                     {
-                        // input semantic SV_Position = vertex coord in object space
-                        new InputElement("SV_Position", 0, Format.R32G32B32A32_Float, 0, 0),
-                        // input semantic COLOR = vertex color
-                        new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0)
+                        new InputElement("SV_Position", 0, Format.R32G32B32_Float, 0, 0),
+                        new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
+                        new InputElement("COLOR", 0, Format.R8G8B8A8_UNorm, 24, 0),
                     }
                 ));
 
@@ -188,6 +187,21 @@ namespace Ch03_01Cube
             // Quad renderer
             var quad = ToDispose(new QuadRenderer());
             quad.Initialize(this);
+            // scale 5x and translate
+            quad.World = Matrix.Scaling(5f);
+            quad.World.TranslationVector = new Vector3(0, -0.5f, 0);
+
+            // Cube renderer
+            var cube = ToDispose(new CubeRenderer());
+            cube.Initialize(this);
+            // move the cube
+            cube.World = Matrix.Translation(-1, 0, 0);
+
+            // Sphere renderer
+            var sphere = ToDispose(new SphereRenderer());
+            sphere.Initialize(this);
+            // move the sphere
+            sphere.World = Matrix.Translation(0, 0, 1.1f);
 
             // Create and initialize a Direct2D FPS text renderer
             var fps = ToDispose(new Common.FpsRenderer("Calibri", Color.CornflowerBlue, new Point(8, 8), 16));
@@ -237,13 +251,17 @@ namespace Ch03_01Cube
                     String.Format("World rotation ({0}) (Up/Down Left/Right Wheel +-)"
                     + "\nView ({1}) (A/D W/S Shift+Wheel)"
                     + "\nPress X to reinitialize the device and resources (device ptr: {2})"
-                    + "\nPress Z to show/hide depth buffer",
+                    + "\nPress Z to show/hide depth buffer"
+                    + "\nPress F to toggle wireframe",
                     rotation,
                     viewMatrix.TranslationVector,
                     DeviceManager.Direct3DDevice.NativePointer);
             };
 
             bool useDepthShaders = false;
+            Dictionary<Keys, bool> keyToggles = new Dictionary<Keys, bool>();
+            keyToggles[Keys.Z] = false;
+            keyToggles[Keys.F] = false;
 
             // Support keyboard/mouse input
             var moveFactor = 0.02f;
@@ -254,6 +272,7 @@ namespace Ch03_01Cube
             {
                 shiftKey = e.Shift;
                 ctrlKey = e.Control;
+                var context = DeviceManager.Direct3DContext;
 
                 switch (e.KeyCode)
                 {
@@ -303,17 +322,36 @@ namespace Ch03_01Cube
                         System.Diagnostics.Debug.WriteLine(SharpDX.Diagnostics.ObjectTracker.ReportActiveObjects());
                         break;
                     case Keys.Z:
-                        var context = DeviceManager.Direct3DContext;
-                        useDepthShaders = !useDepthShaders;
-                        if (useDepthShaders)
+                        keyToggles[Keys.Z] = !keyToggles[Keys.Z];
+                        if (keyToggles[Keys.Z])
                         {
-                            context.VertexShader.Set(depthVertexShader);
                             context.PixelShader.Set(depthPixelShader);
                         }
                         else
                         {
-                            context.VertexShader.Set(vertexShader);
                             context.PixelShader.Set(pixelShader);
+                        }
+                        break;
+                    case Keys.F:
+                        keyToggles[Keys.F] = !keyToggles[Keys.F];
+                        RasterizerStateDescription rasterDesc;
+                        if (context.Rasterizer.State != null)
+                            rasterDesc = context.Rasterizer.State.Description;
+                        else
+                            rasterDesc = new RasterizerStateDescription()
+                            {
+                                CullMode = CullMode.Back,
+                                FillMode = FillMode.Solid
+                            };
+                        if (keyToggles[Keys.F])
+                        {
+                            rasterDesc.FillMode = FillMode.Wireframe;
+                            context.Rasterizer.State = ToDispose(new RasterizerState(context.Device, rasterDesc));
+                        }
+                        else
+                        {
+                            rasterDesc.FillMode = FillMode.Solid;
+                            context.Rasterizer.State = ToDispose(new RasterizerState(context.Device, rasterDesc));
                         }
                         break;
                 }
@@ -424,7 +462,19 @@ namespace Ch03_01Cube
                 // Render the primitives
                 axisLines.Render();
                 triangle.Render();
+
+                worldViewProjection = quad.World * worldMatrix * viewProjection;
                 quad.Render();
+
+                worldViewProjection = cube.World * worldMatrix * viewProjection;
+                worldViewProjection.Transpose();
+                context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+                cube.Render();
+
+                worldViewProjection = sphere.World * worldMatrix * viewProjection;
+                worldViewProjection.Transpose();
+                context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+                sphere.Render();
 
                 // Render FPS
                 fps.Render();

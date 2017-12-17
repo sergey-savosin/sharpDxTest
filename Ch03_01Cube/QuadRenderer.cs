@@ -33,20 +33,22 @@ namespace Ch03_01Cube
             // Retrieve our device instance
             var device = this.DeviceManager.Direct3DDevice;
 
+            var color = Color.LightGray;
+
             // Create a quad (two triangles)
             quadVertices = ToDispose(Buffer.Create(
                 device,
                 BindFlags.VertexBuffer,
-                new[]
+                new Vertex[]
                 {
-                    /* Vertex position - Vertex color */
-                    new Vector4(0.25f, 0.5f, -0.5f, 1.0f), new Vector4(0.0f, 1.0f, 0.0f, 1.0f), // Top-left
-                    new Vector4(0.75f, 0.5f, -0.5f, 1.0f), new Vector4(1.0f, 1.0f, 0.0f, 1.0f), // Top-right
-                    new Vector4(0.75f, 0.0f, -0.5f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f), // Base-right
-                    new Vector4(0.25f, 0.0f, -0.5f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f), // Base-left
+                    /* Position: float x 3, Normal: Vector3, Color */
+                    new Vertex(-0.5f, 0f, -0.5f, Vector3.UnitY, color),
+                    new Vertex(-0.5f, 0f, 0.5f, Vector3.UnitY, color),
+                    new Vertex(0.5f, 0f, 0.5f, Vector3.UnitY, color),
+                    new Vertex(0.5f, 0f, -0.5f, Vector3.UnitY, color),
                 }));
 
-            quadBinding = new VertexBufferBinding(quadVertices, Utilities.SizeOf<Vector4>() * 2, 0);
+            quadBinding = new VertexBufferBinding(quadVertices, Utilities.SizeOf<Vertex>(), 0);
 
             /****************
              * v0    v1
