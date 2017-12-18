@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AxisLinesRenderer.cs" />
+    <Compile Include="ConstantBuffers.cs" />
     <Compile Include="CubeRenderer.cs" />
     <Compile Include="D3DApp.cs" />
     <Compile Include="Form1.cs">

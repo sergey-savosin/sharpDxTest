@@ -35,9 +35,12 @@ namespace Ch03_01Cube
         // Vertex layout for the IA
         InputLayout vertexLayout;
 
-        // A buffer to update constant buffer
-        // used by vertex shader
-        Buffer worldViewProjectionBuffer;
+        // A buffer that will be used to update the worldViewProjection 
+        // constant buffer of the vertex shader
+        Buffer perObjectBuffer;
+
+        // A buffer that will be used to update the lights
+        Buffer perFrameBuffer;
 
         // Depth stencil
         DepthStencilState depthStencilState;
@@ -67,7 +70,8 @@ namespace Ch03_01Cube
             RemoveAndDispose(ref depthVertexShaderBytecode);
 
             RemoveAndDispose(ref vertexLayout);
-            RemoveAndDispose(ref worldViewProjectionBuffer);
+            RemoveAndDispose(ref perFrameBuffer);
+            RemoveAndDispose(ref perObjectBuffer);
             RemoveAndDispose(ref depthStencilState);
 
             // Get a reference to the Device1 instance and context
@@ -110,16 +114,18 @@ namespace Ch03_01Cube
                 ));
 
             // Create the buffer that will store our WVP matrix
-            worldViewProjectionBuffer = ToDispose(
+            perObjectBuffer = ToDispose(
                 new SharpDX.Direct3D11.Buffer(
                     device,
-                    Utilities.SizeOf<Matrix>(),
+                    Utilities.SizeOf<ConstantBuffers.PerObject>(),
                     ResourceUsage.Default,
                     BindFlags.ConstantBuffer,
                     CpuAccessFlags.None,
                     ResourceOptionFlags.None,
                     0
                     ));
+
+
 
             // Configure the OM to discard pixels ...
             depthStencilState = ToDispose(new DepthStencilState(
@@ -155,7 +161,7 @@ namespace Ch03_01Cube
             context.InputAssembler.InputLayout = vertexLayout;
 
             // Bind constant buffer to vertex shader stage
-            context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+            context.VertexShader.SetConstantBuffer(0, perObjectBuffer);
 
             // Set the vertex shader to run
             context.VertexShader.Set(vertexShader);
@@ -258,7 +264,6 @@ namespace Ch03_01Cube
                     DeviceManager.Direct3DDevice.NativePointer);
             };
 
-            bool useDepthShaders = false;
             Dictionary<Keys, bool> keyToggles = new Dictionary<Keys, bool>();
             keyToggles[Keys.Z] = false;
             keyToggles[Keys.F] = false;
@@ -457,7 +462,7 @@ namespace Ch03_01Cube
                 worldViewProjection.Transpose();
 
                 // Write the WorldViewProjection to constant buffer
-                context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
 
                 // Render the primitives
                 axisLines.Render();
@@ -468,12 +473,12 @@ namespace Ch03_01Cube
 
                 worldViewProjection = cube.World * worldMatrix * viewProjection;
                 worldViewProjection.Transpose();
-                context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
                 cube.Render();
 
                 worldViewProjection = sphere.World * worldMatrix * viewProjection;
                 worldViewProjection.Transpose();
-                context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
                 sphere.Render();
 
                 // Render FPS
