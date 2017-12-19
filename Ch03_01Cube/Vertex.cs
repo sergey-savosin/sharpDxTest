@@ -18,6 +18,7 @@ namespace Ch03_01Cube
         public Vector3 Position;
         public Vector3 Normal;
         public Color Color;
+        //public Vector2 UV;
 
         /// <summary>
         /// Create vertex with position (normal will be based on position and color will be white)

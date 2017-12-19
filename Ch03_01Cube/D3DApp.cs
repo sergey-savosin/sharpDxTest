@@ -78,40 +78,35 @@ namespace Ch03_01Cube
             var device = deviceManager.Direct3DDevice;
             var context = deviceManager.Direct3DContext;
 
-            ShaderFlags shaderFlags = ShaderFlags.None;
-#if DEBUG
-            shaderFlags = ShaderFlags.Debug;
-#endif
-
-            // Compile and create the vertex shader
-            vertexShaderBytecode = ToDispose(
-                ShaderBytecode.CompileFromFile("Simple.hlsl", "VSMain", "vs_5_0", shaderFlags));
-            vertexShader = ToDispose(new VertexShader(device, vertexShaderBytecode));
+            // Compile and create the vertex shader and input layout
+            using (var vertexShaderBytecode = HLSLCompiler.CompileFromFile(@"Shaders\VS.hlsl", "VSMain", "vs_5_0"))
+            {
+                vertexShader = ToDispose(new VertexShader(device, vertexShaderBytecode));
+                // Layout from VertexShader input signature
+                vertexLayout = ToDispose(new InputLayout(device,
+                    vertexShaderBytecode.GetPart(ShaderBytecodePart.InputSignatureBlob),
+                    //?ShaderSignature.GetInputSignature(vertexShaderBytecode),
+                new[]
+                {
+                    // "SV_Position" = vertex coordinate in object space
+                    new InputElement("SV_Position", 0, Format.R32G32B32_Float, 0, 0),
+                    // "NORMAL" = the vertex normal
+                    new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
+                    // "COLOR"
+                    new InputElement("COLOR", 0, Format.R8G8B8A8_UNorm, 24, 0),
+                    // ?
+                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 28, 0),
+                }));
+            }
 
             // Compile and create the pixel shader
-            pixelShaderBytecode = ToDispose(
-                ShaderBytecode.CompileFromFile("Simple.hlsl", "PSMain", "ps_5_0", shaderFlags));
-            pixelShader = ToDispose(new PixelShader(device, pixelShaderBytecode));
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\SimplePS.hlsl", "PSMain", "ps_5_0"))
+                pixelShader = ToDispose(new PixelShader(device, bytecode));
 
             // Compile and create the depth vertex and pixel shaders
-            // These shaders are for checking what the depth buffer should look like
-            depthVertexShaderBytecode = ToDispose(ShaderBytecode.CompileFromFile("Depth.hlsl", "VSMain", "vs_5_0", shaderFlags));
-            depthVertexShader = ToDispose(new VertexShader(device, depthVertexShaderBytecode));
-            depthPixelShaderBytecode = ToDispose(ShaderBytecode.CompileFromFile("Depth.hlsl", "PSMain", "ps_5_0", shaderFlags));
-            depthPixelShader = ToDispose(new PixelShader(device, depthPixelShaderBytecode));
-
-            // Layout from VertexShader input signature
-            vertexLayout = ToDispose(
-                new InputLayout(
-                    device,
-                    ShaderSignature.GetInputSignature(vertexShaderBytecode),
-                    new[]
-                    {
-                        new InputElement("SV_Position", 0, Format.R32G32B32_Float, 0, 0),
-                        new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
-                        new InputElement("COLOR", 0, Format.R8G8B8A8_UNorm, 24, 0),
-                    }
-                ));
+            // This shader is for checking what the depth buffer would look like
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\DepthPS.hlsl", "PSMain", "ps_5_0"))
+                depthPixelShader = ToDispose(new PixelShader(device, bytecode));
 
             // Create the buffer that will store our WVP matrix
             perObjectBuffer = ToDispose(
@@ -125,6 +120,17 @@ namespace Ch03_01Cube
                     0
                     ));
 
+            perFrameBuffer = ToDispose(
+                new SharpDX.Direct3D11.Buffer(
+                    device,
+                    Utilities.SizeOf<ConstantBuffers.PerFrame>(),
+                    ResourceUsage.Default,
+                    BindFlags.ConstantBuffer,
+                    CpuAccessFlags.None,
+                    ResourceOptionFlags.None,
+                    0
+                    ));
+        
 
 
             // Configure the OM to discard pixels ...
@@ -162,15 +168,26 @@ namespace Ch03_01Cube
 
             // Bind constant buffer to vertex shader stage
             context.VertexShader.SetConstantBuffer(0, perObjectBuffer);
+            context.VertexShader.SetConstantBuffer(1, perFrameBuffer);
 
             // Set the vertex shader to run
             context.VertexShader.Set(vertexShader);
+
+            // Set our pixel constant buffer
+            context.PixelShader.SetConstantBuffer(1, perFrameBuffer);
 
             // Set the pixel shader to run
             context.PixelShader.Set(pixelShader);
 
             // Set our depth stencil state
             context.OutputMerger.DepthStencilState = depthStencilState;
+
+            context.Rasterizer.State = ToDispose(new RasterizerState(device, new RasterizerStateDescription()
+            {
+                FillMode = FillMode.Solid,
+                CullMode = CullMode.Back,
+                IsFrontCounterClockwise = false,
+            }));
         }
 
         protected override void CreateSizeDependentResources(D3DApplicationBase app)
@@ -447,6 +464,10 @@ namespace Ch03_01Cube
                 // ViewProjection matrix
                 var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix);
 
+                // Extract camera position from view
+                var camPosition = Matrix.Transpose(Matrix.Invert(viewMatrix)).Column4;
+                cameraPosition = new Vector3(camPosition.X, camPosition.Y, camPosition.Z);
+
                 // If Keys.CtrlKey is down, auto rotate viewProjection based on time
                 if (ctrlKey)
                 {
@@ -454,31 +475,37 @@ namespace Ch03_01Cube
                     viewProjection = Matrix.RotationY(time * 1.8f) * Matrix.RotationZ(time * 1f) * Matrix.RotationZ(time * 0.6f) * viewProjection;
                 }
 
-                // WorldViewProjection matrix
-                var worldViewProjection = worldMatrix * viewProjection;
+                // Update the per frame constant buffer
+                var perFrame = new ConstantBuffers.PerFrame();
+                perFrame.CameraPosition = cameraPosition;
+                context.UpdateSubresource(ref perFrame, perFrameBuffer);
 
-                // HLSL defaults to "column-major" order matrices
-                // SharpDx uses row-major matrices
-                worldViewProjection.Transpose();
+                // Render each object
 
-                // Write the WorldViewProjection to constant buffer
-                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
+                var perObject = new ConstantBuffers.PerObject();
 
-                // Render the primitives
-                axisLines.Render();
-                triangle.Render();
-
-                worldViewProjection = quad.World * worldMatrix * viewProjection;
+                // QUAD
+                perObject.World = quad.World * worldMatrix;
+                perObject.WorldInverseTranspose = Matrix.Transpose(Matrix.Invert(perObject.World));
+                perObject.WorldViewProjection = perObject.World * viewProjection;
+                perObject.Transpose();
+                context.UpdateSubresource(ref perObject, perObjectBuffer);
                 quad.Render();
 
-                worldViewProjection = cube.World * worldMatrix * viewProjection;
-                worldViewProjection.Transpose();
-                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
+                // CUBE
+                perObject.World = cube.World * worldMatrix;
+                perObject.WorldInverseTranspose = Matrix.Transpose(Matrix.Invert(perObject.World));
+                perObject.WorldViewProjection = perObject.World * viewProjection;
+                perObject.Transpose();
+                context.UpdateSubresource(ref perObject, perObjectBuffer);
                 cube.Render();
 
-                worldViewProjection = sphere.World * worldMatrix * viewProjection;
-                worldViewProjection.Transpose();
-                context.UpdateSubresource(ref worldViewProjection, perObjectBuffer);
+                // SPHERE
+                perObject.World = sphere.World * worldMatrix;
+                perObject.WorldInverseTranspose = Matrix.Transpose(Matrix.Invert(perObject.World));
+                perObject.WorldViewProjection = perObject.World * viewProjection;
+                perObject.Transpose();
+                context.UpdateSubresource(ref perObject, perObjectBuffer);
                 sphere.Render();
 
                 // Render FPS

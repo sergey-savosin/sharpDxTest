@@ -43,7 +43,7 @@ namespace Ch03_01Cube
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct PerFrame
         {
-            public SharpDX.Vector3 CameraPosition;
+            public Vector3 CameraPosition;
             float _padding0;
         }
     }
