@@ -42,6 +42,9 @@ namespace Ch03_01Cube
         // A buffer that will be used to update the lights
         Buffer perFrameBuffer;
 
+        // A buffer that will be used to update object materials
+        Buffer perMaterialBuffer;
+
         // Depth stencil
         DepthStencilState depthStencilState;
 
@@ -72,6 +75,8 @@ namespace Ch03_01Cube
             RemoveAndDispose(ref vertexLayout);
             RemoveAndDispose(ref perFrameBuffer);
             RemoveAndDispose(ref perObjectBuffer);
+            RemoveAndDispose(ref perMaterialBuffer);
+
             RemoveAndDispose(ref depthStencilState);
 
             // Get a reference to the Device1 instance and context
@@ -130,7 +135,17 @@ namespace Ch03_01Cube
                     ResourceOptionFlags.None,
                     0
                     ));
-        
+
+            perMaterialBuffer = ToDispose(
+                new SharpDX.Direct3D11.Buffer(
+                    device,
+                    Utilities.SizeOf<ConstantBuffers.PerMaterial>(),
+                    ResourceUsage.Default,
+                    BindFlags.ConstantBuffer,
+                    CpuAccessFlags.None,
+                    ResourceOptionFlags.None,
+                    0
+                    ));
 
 
             // Configure the OM to discard pixels ...
@@ -169,12 +184,14 @@ namespace Ch03_01Cube
             // Bind constant buffer to vertex shader stage
             context.VertexShader.SetConstantBuffer(0, perObjectBuffer);
             context.VertexShader.SetConstantBuffer(1, perFrameBuffer);
+            context.VertexShader.SetConstantBuffer(2, perMaterialBuffer);
 
             // Set the vertex shader to run
             context.VertexShader.Set(vertexShader);
 
             // Set our pixel constant buffer
             context.PixelShader.SetConstantBuffer(1, perFrameBuffer);
+            context.PixelShader.SetConstantBuffer(2, perMaterialBuffer);
 
             // Set the pixel shader to run
             context.PixelShader.Set(pixelShader);
@@ -478,9 +495,23 @@ namespace Ch03_01Cube
                 // Update the per frame constant buffer
                 var perFrame = new ConstantBuffers.PerFrame();
                 perFrame.CameraPosition = cameraPosition;
+                perFrame.Light.Color = Color.White;
+                var lightDir = Vector3.Transform(new Vector3(1f, -1f, -1f), worldMatrix);
+                perFrame.Light.Direction = new Vector3(lightDir.X, lightDir.Y, lightDir.Z);
+
                 context.UpdateSubresource(ref perFrame, perFrameBuffer);
 
                 // Render each object
+
+                var perMaterial = new ConstantBuffers.PerMaterial();
+                perMaterial.Ambient = new Color4(0.2f);
+                perMaterial.Diffuse = Color.White;
+                perMaterial.Emissive = new Color4(0);
+                perMaterial.Specular = Color.White;
+                perMaterial.SpecularPower = 20f;
+                perMaterial.HasTexture = 0;
+                perMaterial.UVTransform = Matrix.Identity;
+                context.UpdateSubresource(ref perMaterial, perMaterialBuffer);
 
                 var perObject = new ConstantBuffers.PerObject();
 

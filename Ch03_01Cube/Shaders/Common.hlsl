@@ -1,3 +1,9 @@
+struct DirectionalLight
+{
+	float4 Color;
+	float3 Direction;
+};
+
 // Vertex shader input...
 struct VertexShaderInput
 {
@@ -33,5 +39,18 @@ cbuffer PerObject : register(b0)
 
 cbuffer PerFrame : register(b1)
 {
+	DirectionalLight Light;
 	float3 CameraPosition;
 };
+
+cbuffer PerMaterial : register(b2)
+{
+	float4 MaterialAmbient;
+	float4 MaterialDiffuse;
+	float4 MaterialSpecular;
+	float MaterialSpecularPower;
+	bool HasTexture;
+	float4 MaterialEmissive;
+	float4x4 UVTransform;
+
+}

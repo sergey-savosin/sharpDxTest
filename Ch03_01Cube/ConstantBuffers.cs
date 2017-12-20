@@ -37,14 +37,36 @@ namespace Ch03_01Cube
             }
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct DirectionalLight
+        {
+            public Color4 Color;
+            public Vector3 Direction;
+            float _padding0;
+        }
+
         /// <summary>
         /// Per frame constant buffer (camera position)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct PerFrame
         {
+            public DirectionalLight Light;
             public Vector3 CameraPosition;
             float _padding0;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct PerMaterial
+        {
+            public Color4 Ambient;
+            public Color4 Diffuse;
+            public Color4 Specular;
+            public float SpecularPower;
+            public uint HasTexture; // 0 false, 1 true
+            Vector2 _padding0;
+            public Color4 Emissive;
+            public Matrix UVTransform; // Support UV transforms
         }
     }
 }

@@ -5,7 +5,7 @@ PixelShaderInput VSMain(VertexShaderInput vertex)
 	PixelShaderInput result = (PixelShaderInput)0;
 	// Apply WPV matrix transformation
 	result.Position = mul(vertex.Position, WorldViewProjection);
-	result.Diffuse = vertex.Color;
+	result.Diffuse = vertex.Color * MaterialDiffuse;
 	result.TextureUV = vertex.TextureUV;
 
 	// Transform normal to world space
@@ -13,6 +13,9 @@ PixelShaderInput VSMain(VertexShaderInput vertex)
 
 	// transform input position to world
 	result.WorldPosition = mul(vertex.Position, World).xyz;
+
+	// Apply material UV transformation
+	result.TextureUV = mul(float4(vertex.TextureUV.x, vertex.TextureUV.y, 0, 1), (float4x2)UVTransform).xy;
 	
 	return result;
 }
