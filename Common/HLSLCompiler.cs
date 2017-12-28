@@ -37,7 +37,8 @@ namespace Common
             var includeHandler = new HLSLFileIncludeHandler(Path.GetDirectoryName(hlslFile));
             result = ShaderBytecode.Compile(shaderSource, entryPoint, profile, flags, EffectFlags.None, defines, includeHandler, Path.GetFileName(hlslFile));
 
-            if (result.ResultCode.Failure)
+            //if (result.ResultCode.Failure)
+            if (!String.IsNullOrEmpty(result.Message))
                 throw new CompilationException(result.ResultCode, result.Message);
 
             return result;

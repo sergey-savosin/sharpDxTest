@@ -54,3 +54,28 @@ cbuffer PerMaterial : register(b2)
 	float4x4 UVTransform;
 
 }
+
+float3 Lambert(float4 pixelDiffuse, float3 normal, float3 toLight)
+{
+	float3 diffuseAmount = saturate(dot(normal, toLight));
+	return pixelDiffuse.rgb * diffuseAmount;
+}
+
+float3 SpecularPhong(float3 normal, float3 toLight, float3 toEye)
+{
+	// R = reflect(i, n) => R = i - 2 * n * dot(i, n)
+	float3 reflection = reflect(-toLight, normal);
+
+	float specularAmount = pow(saturate(dot(reflection, toEye)), max(MaterialSpecularPower, 0.00001f));
+	return MaterialSpecular.rgb * specularAmount;
+}
+
+float3 SpecularBlinnPhong(float3 normal, float3 toLight, float3 toEye)
+{
+	// Calculate half vector
+	float3 halfway = normalize(toLight + toEye);
+
+	// Calculate specular: smaller power = larger highlight
+	float specularAmount = pow(saturate(dot(normal, halfway)), max(MaterialSpecularPower, 0.00001f));
+	return MaterialSpecular.rgb * specularAmount;
+}

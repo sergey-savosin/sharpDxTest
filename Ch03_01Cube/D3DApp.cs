@@ -17,20 +17,20 @@ namespace Ch03_01Cube
     public class D3DApp : D3DApplicationDesktop
     {
         // Vertex shader
-        ShaderBytecode vertexShaderBytecode;
         VertexShader vertexShader;
 
         // Pixel shader
-        ShaderBytecode pixelShaderBytecode;
         PixelShader pixelShader;
 
-        // A vertex shader that gives depth info to pixel shader
-        ShaderBytecode depthVertexShaderBytecode;
-        VertexShader depthVertexShader;
-
         // A pixel shader that renders the depth (black closer, white further away)
-        ShaderBytecode depthPixelShaderBytecode;
         PixelShader depthPixelShader;
+
+        // The Lambert shader
+        PixelShader lambertShader;
+
+        PixelShader phongShader;
+
+        PixelShader blinnPhongShader;
 
         // Vertex layout for the IA
         InputLayout vertexLayout;
@@ -63,14 +63,13 @@ namespace Ch03_01Cube
 
             // Release all resources
             RemoveAndDispose(ref vertexShader);
-            RemoveAndDispose(ref vertexShaderBytecode);
             RemoveAndDispose(ref pixelShader);
-            RemoveAndDispose(ref pixelShaderBytecode);
 
             RemoveAndDispose(ref depthPixelShader);
-            RemoveAndDispose(ref depthPixelShaderBytecode);
-            RemoveAndDispose(ref depthVertexShader);
-            RemoveAndDispose(ref depthVertexShaderBytecode);
+
+            RemoveAndDispose(ref lambertShader);
+            RemoveAndDispose(ref phongShader);
+            RemoveAndDispose(ref blinnPhongShader);
 
             RemoveAndDispose(ref vertexLayout);
             RemoveAndDispose(ref perFrameBuffer);
@@ -112,6 +111,15 @@ namespace Ch03_01Cube
             // This shader is for checking what the depth buffer would look like
             using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\DepthPS.hlsl", "PSMain", "ps_5_0"))
                 depthPixelShader = ToDispose(new PixelShader(device, bytecode));
+
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\DiffusePS.hlsl", "PSMain", "ps_5_0"))
+                lambertShader = ToDispose(new PixelShader(device, bytecode));
+
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\PhongPS.hlsl", "PSMain", "ps_5_0"))
+                phongShader = ToDispose(new PixelShader(device, bytecode));
+
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\BlinnPhongPS.hlsl", "PSMain", "ps_5_0"))
+                blinnPhongShader = ToDispose(new PixelShader(device, bytecode));
 
             // Create the buffer that will store our WVP matrix
             perObjectBuffer = ToDispose(
@@ -292,7 +300,8 @@ namespace Ch03_01Cube
                     + "\nView ({1}) (A/D W/S Shift+Wheel)"
                     + "\nPress X to reinitialize the device and resources (device ptr: {2})"
                     + "\nPress Z to show/hide depth buffer"
-                    + "\nPress F to toggle wireframe",
+                    + "\nPress F to toggle wireframe"
+                    + "\nPress 1-4 to toggle shaders",
                     rotation,
                     viewMatrix.TranslationVector,
                     DeviceManager.Direct3DDevice.NativePointer);
@@ -393,6 +402,19 @@ namespace Ch03_01Cube
                             context.Rasterizer.State = ToDispose(new RasterizerState(context.Device, rasterDesc));
                         }
                         break;
+                    case Keys.D1:
+                        context.PixelShader.Set(pixelShader);
+                        break;
+                    case Keys.D2:
+                        context.PixelShader.Set(lambertShader);
+                        break;
+                    case Keys.D3:
+                        context.PixelShader.Set(phongShader);
+                        break;
+                    case Keys.D4:
+                        context.PixelShader.Set(blinnPhongShader);
+                        break;
+
                 }
 
                 updateText();
