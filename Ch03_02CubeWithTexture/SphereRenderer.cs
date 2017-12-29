@@ -18,6 +18,9 @@ namespace Ch03_02CubeWithTexture
         Buffer indexBuffer;
         VertexBufferBinding vertexBinding;
 
+        ShaderResourceView textureView;
+        SamplerState samplerState;
+
         int totalVertexCount = 0;
 
         protected override void CreateDeviceDependentResources()
@@ -28,6 +31,26 @@ namespace Ch03_02CubeWithTexture
 
             // Retrieve our SharpDX.Direct3D11.Device1 instance
             var device = this.DeviceManager.Direct3DDevice;
+
+            // Load texture (a DDS cube map)
+            var imagingFactory = DeviceManager.WICFactory;
+            var texture = LoadTexture.LoadFromFile(device, imagingFactory, "CubeMap.png");
+            textureView = ToDispose(
+                new ShaderResourceView(device, texture));
+
+            // Create our sampler state
+            samplerState = new SamplerState(device, new SamplerStateDescription()
+            {
+                AddressU = TextureAddressMode.Wrap,
+                AddressV = TextureAddressMode.Wrap,
+                AddressW = TextureAddressMode.Wrap,
+                BorderColor = new Color4(0, 0, 0, 0),
+                ComparisonFunction = Comparison.Never,
+                Filter = Filter.MinMagMipLinear,
+                MaximumLod = float.MaxValue, // Our cube map has 10 mip map levels (0-9)
+                MinimumLod = 0,
+                MipLodBias = 0.0f
+            });
 
             Vertex[] vertices;
             int[] indices;
@@ -43,6 +66,9 @@ namespace Ch03_02CubeWithTexture
         protected override void DoRender()
         {
             var context = this.DeviceManager.Direct3DContext;
+
+            context.PixelShader.SetShaderResource(0, textureView);
+            context.PixelShader.SetSampler(0, samplerState);
 
             // Tell the IA we are using triangles
             context.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;

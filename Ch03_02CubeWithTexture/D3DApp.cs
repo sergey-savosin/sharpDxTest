@@ -45,6 +45,8 @@ namespace Ch03_02CubeWithTexture
         // A buffer that will be used to update object materials
         Buffer perMaterialBuffer;
 
+        SamplerState sampler;
+
         // Depth stencil
         DepthStencilState depthStencilState;
 
@@ -75,6 +77,8 @@ namespace Ch03_02CubeWithTexture
             RemoveAndDispose(ref perFrameBuffer);
             RemoveAndDispose(ref perObjectBuffer);
             RemoveAndDispose(ref perMaterialBuffer);
+
+            RemoveAndDispose(ref sampler); //?
 
             RemoveAndDispose(ref depthStencilState);
 
@@ -112,13 +116,13 @@ namespace Ch03_02CubeWithTexture
             using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\DepthPS.hlsl", "PSMain", "ps_5_0"))
                 depthPixelShader = ToDispose(new PixelShader(device, bytecode));
 
-            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\DiffusePS.hlsl", "PSMain", "ps_5_0"))
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\CubeMapDiffusePS.hlsl", "PSMain", "ps_5_0"))
                 lambertShader = ToDispose(new PixelShader(device, bytecode));
 
-            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\PhongPS.hlsl", "PSMain", "ps_5_0"))
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\CubeMapBlinnPhongPS.hlsl", "PSMain", "ps_5_0"))
                 phongShader = ToDispose(new PixelShader(device, bytecode));
 
-            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\BlinnPhongPS.hlsl", "PSMain", "ps_5_0"))
+            using (var bytecode = HLSLCompiler.CompileFromFile(@"Shaders\CubeMapPhongPS.hlsl", "PSMain", "ps_5_0"))
                 blinnPhongShader = ToDispose(new PixelShader(device, bytecode));
 
             // Create the buffer that will store our WVP matrix

@@ -18,14 +18,39 @@ namespace Ch03_02CubeWithTexture
         Buffer indexBuffer;
         VertexBufferBinding vertexBinding;
 
+        ShaderResourceView textureView;
+        SamplerState samplerState;
+
         protected override void CreateDeviceDependentResources()
         {
             //base.CreateDeviceDependentResources();
 
             RemoveAndDispose(ref vertexBuffer);
             RemoveAndDispose(ref indexBuffer);
+            RemoveAndDispose(ref textureView);
+            RemoveAndDispose(ref samplerState);
 
             var device = DeviceManager.Direct3DDevice;
+
+            // Load texture (a DDS cube map)
+            var imagingFactory = DeviceManager.WICFactory;
+            var texture = LoadTexture.LoadFromFile(device, imagingFactory, "CubeMap.png");
+            textureView = ToDispose(
+                new ShaderResourceView(device, texture));
+
+            // Create sampler state
+            samplerState = new SamplerState(device, new SamplerStateDescription()
+            {
+                AddressU = TextureAddressMode.Clamp,
+                AddressV = TextureAddressMode.Clamp,
+                AddressW = TextureAddressMode.Clamp,
+                BorderColor = new Color4(0, 0, 0, 0),
+                ComparisonFunction = Comparison.Never,
+                Filter = Filter.MinMagMipLinear,
+                MaximumLod = 9, // Our cube map has 10 mip map levels (0-9)
+                MinimumLod = 0,
+                MipLodBias = 0.0f
+            });
 
             // Create vertex buffer for cube
             vertexBuffer = ToDispose(Buffer.Create(
@@ -33,16 +58,16 @@ namespace Ch03_02CubeWithTexture
                 BindFlags.VertexBuffer,
                 new Vertex[]
                 {
-                    /* Vertex position - Color */
-                    new Vertex(-0.5f, 0.5f, -0.5f, Color.Gray), // 0-Top-Left
-                    new Vertex(0.5f, 0.5f, -0.5f, Color.Gray), // 1-Top-Right
-                    new Vertex(0.5f, -0.5f, -0.5f, Color.Gray), // 2-Base-right
-                    new Vertex(-0.5f, -0.5f, -0.5f, Color.Gray), // 3-Base-Left
+                    /* Vertex position - Normal - Color */
+                    new Vertex(-0.5f, 0.5f, -0.5f,  -1f, 1f, -1f,  Color.Gray), // 0-Top-Left
+                    new Vertex(0.5f, 0.5f, -0.5f,    1f, 1f, -1f,  Color.Gray), // 1-Top-Right
+                    new Vertex(0.5f, -0.5f, -0.5f,   1f, -1f, -1f, Color.Gray), // 2-Base-right
+                    new Vertex(-0.5f, -0.5f, -0.5f, -1f, -1f, -1f, Color.Gray), // 3-Base-Left
 
-                    new Vertex(-0.5f, 0.5f, 0.5f, Color.Gray), // 4-Top-Left
-                    new Vertex(0.5f, 0.5f, 0.5f, Color.Gray), // 5-Top-right
-                    new Vertex(0.5f, -0.5f, 0.5f, Color.Gray), // 6-Base-right
-                    new Vertex(-0.5f, -0.5f, 0.5f, Color.Gray), // 7-Base-left
+                    new Vertex(-0.5f, 0.5f, 0.5f, -1f, 1f, 1f,   Color.Gray), // 4-Top-Left
+                    new Vertex(0.5f, 0.5f, 0.5f,   1f, 1f, 1f,   Color.Gray), // 5-Top-right
+                    new Vertex(0.5f, -0.5f, 0.5f,  1f, -1f, 1f,  Color.Gray), // 6-Base-right
+                    new Vertex(-0.5f, -0.5f, 0.5f, -1f, -1f, 1f, Color.Gray), // 7-Base-left
                 }));
 
             vertexBinding = new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vertex>(), 0);
@@ -70,6 +95,9 @@ namespace Ch03_02CubeWithTexture
         protected override void DoRender()
         {
             var context = this.DeviceManager.Direct3DContext;
+
+            context.PixelShader.SetShaderResource(0, textureView);
+            context.PixelShader.SetSampler(0, samplerState);
 
             context.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
             // Set the index buffer

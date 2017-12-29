@@ -42,10 +42,10 @@ namespace Ch03_02CubeWithTexture
                 new Vertex[]
                 {
                     /* Position: float x 3, Normal: Vector3, Color */
-                    new Vertex(-0.5f, 0f, -0.5f, Vector3.UnitY, color),
-                    new Vertex(-0.5f, 0f, 0.5f, Vector3.UnitY, color),
-                    new Vertex(0.5f, 0f, 0.5f, Vector3.UnitY, color),
-                    new Vertex(0.5f, 0f, -0.5f, Vector3.UnitY, color),
+                    new Vertex(-0.5f, 0f, -0.5f, -0.577f, 0.577f, -0.577f, color),
+                    new Vertex(-0.5f, 0f, 0.5f,  -0.577f, 0.577f, 0.577f, color),
+                    new Vertex(0.5f, 0f, 0.5f,    0.577f, 0.577f, 0.577f, color),
+                    new Vertex(0.5f, 0f, -0.5f,   0.577f, 0.577f, -0.577f, color),
                 }));
 
             quadBinding = new VertexBufferBinding(quadVertices, Utilities.SizeOf<Vertex>(), 0);

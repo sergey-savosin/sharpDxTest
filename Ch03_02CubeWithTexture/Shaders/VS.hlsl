@@ -3,6 +3,9 @@
 PixelShaderInput VSMain(VertexShaderInput vertex)
 {
 	PixelShaderInput result = (PixelShaderInput)0;
+	
+	vertex.Position.w = 1.0; //!
+	
 	// Apply WPV matrix transformation
 	result.Position = mul(vertex.Position, WorldViewProjection);
 	result.Diffuse = vertex.Color * MaterialDiffuse;
