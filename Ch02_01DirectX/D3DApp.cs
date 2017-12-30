@@ -51,6 +51,9 @@ namespace Ch02_01DirectX
             var description = base.CreateSwapChainDescription();
             description.SampleDescription.Count = 4;
             description.SampleDescription.Quality = 0;
+            //? description.SampleDescription = new SampleDescription(4, 0);
+            return description;
+
             return description;
         }
 
