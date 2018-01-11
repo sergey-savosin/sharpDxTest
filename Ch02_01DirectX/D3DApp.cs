@@ -53,8 +53,6 @@ namespace Ch02_01DirectX
             description.SampleDescription.Quality = 0;
             //? description.SampleDescription = new SampleDescription(4, 0);
             return description;
-
-            return description;
         }
 
         protected override void CreateDeviceDependentResources(DeviceManager deviceManager)
